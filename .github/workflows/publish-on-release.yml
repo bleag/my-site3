@@ -9,11 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Шаг 1: Клонируем репозиторий
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Шаг 2: Копируем файлы сайта в папку с версией
       - name: Copy files
         run: |
           VERSION=${{ github.ref_name }}
@@ -22,9 +20,8 @@ jobs:
           cp -r ./ru "./pages/${VERSION}/"
           cp ./index.html "./pages/${VERSION}/"
 
-      # Шаг 3: Публикуем в GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v6
+        uses: peaceiris/actions-gh-pages@v5
         with:
           github_token: ${{ secrets.PAT_TOKEN }}
           publish_dir: ./pages
