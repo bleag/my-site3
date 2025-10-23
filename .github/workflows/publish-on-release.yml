@@ -1,58 +1,28 @@
-name: Publish site on release
+name: CI/CD release
 
 on:
   release:
     types: [published]
 
 jobs:
-  publish:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # 1. Клонируем репозиторий
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 2. Определяем переменные
-      - name: Set variables
-        run: |
-          echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          echo "TARGET_DIR=v${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-
-      # 3. Клонируем ветку gh-pages (или создаём её)
-      - name: Prepare gh-pages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git clone --single-branch --branch gh-pages https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} gh-pages || \
-          (git clone https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} gh-pages && cd gh-pages && git checkout --orphan gh-pages)
-          cd gh-pages
-          git pull origin gh-pages || true
-
-      # 4. Копируем файлы в папку релиза и latest
       - name: Copy files
         run: |
-          cd gh-pages
-          mkdir -p "v${{ github.event.release.tag_name }}"
-          cp -R ../ru ./v${{ github.event.release.tag_name }}/ru
-          cp -R ../en ./v${{ github.event.release.tag_name }}/en
-          cp ../index.html ./v${{ github.event.release.tag_name }}/index.html
-          rm -rf latest
-          mkdir -p latest
-          cp -R ../ru ./latest/ru
-          cp -R ../en ./latest/en
-          cp ../index.html ./latest/index.html
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Publish site for release ${{ github.event.release.tag_name }}"
-            git push origin gh-pages
-          fi
-
-      # 5. Завершение
-      - name: Done
-        run: echo "Site published under /v${{ github.event.release.tag_name }}/ and latest/"
+          VERSION=${{ github.ref_name }}
+          mkdir -p "./pages/${VERSION}"
+          cp -r ./en "./pages/${VERSION}/"
+          cp -r ./ru "./pages/${VERSION}/"
+          cp ./index.html "./pages/${VERSION}/"
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages
+          keep_files: true
