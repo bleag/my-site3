@@ -21,7 +21,7 @@ jobs:
           cp ./index.html "./pages/${VERSION}/"
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v5
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.PAT_TOKEN }}
           publish_dir: ./pages
